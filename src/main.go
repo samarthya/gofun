@@ -6,41 +6,38 @@ import (
 )
 
 func send(ch chan int) {
-	for i := 0; i < 10; i++ {
-		time.Sleep(1 * time.Second)
-		ch <- i
-	}
+	go func() {
+		for i := 0; i < 10; i++ {
+			time.Sleep(1 * time.Second)
+			ch <- i
+		}
 
-	// os.Exit(0)
-	fmt.Println(" Sender done...")
-	return
-}
-
-func term() {
-	done <- true
+		// os.Exit(0)
+		fmt.Println(" Sender done...")
+		// Close the channel
+		close(ch)
+	}()
 }
 
 func receive(ch chan int) {
-	var val int
 
-	defer term()
+	go func() {
+		defer func() { done <- true }()
 
-	for {
+		for val := range ch {
 
-		if val = <-ch; val >= 9 {
-			fmt.Println(" Closing reciever...")
+			if val >= 9 {
+				fmt.Println(" Closing reciever...")
+				fmt.Printf(" > %d\n", val)
+				// os.Exit(0)
+				break
+			}
+
 			fmt.Printf(" > %d\n", val)
-
-			// Close the channel
-			close(ch)
-			// os.Exit(0)
-			break
 		}
+		fmt.Println(" Receiver done...")
+	}()
 
-		fmt.Printf(" > %d\n", val)
-	}
-
-	fmt.Println(" Receiver done...")
 }
 
 var done chan bool = make(chan bool)
@@ -49,8 +46,8 @@ func main() {
 	fmt.Println(" --- Main ---")
 	ch := make(chan int)
 
-	go send(ch)
-	go receive(ch)
+	send(ch)
+	receive(ch)
 
 	// wait on done
 	<-done
