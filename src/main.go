@@ -2,50 +2,51 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"runtime"
-	"strings"
 	"time"
 )
 
 func send(ch chan int) {
 	for i := 0; i < 10; i++ {
-		ch <- i
 		time.Sleep(1 * time.Second)
+		ch <- i
 	}
-	os.Exit(0)
+
+	// os.Exit(0)
+	fmt.Println(" Sender done...")
+	return
+}
+
+func term() {
+	done <- true
 }
 
 func receive(ch chan int) {
 	var val int
 
+	defer term()
+
 	for {
-		val = <-ch
-		fmt.Printf(" > %d\n", val)
-		if val >= 10 {
+
+		if val = <-ch; val >= 9 {
+			fmt.Println(" Closing reciever...")
+			fmt.Printf(" > %d\n", val)
+
+			// Close the channel
 			close(ch)
-			done <- true
-			os.Exit(0)
+			// os.Exit(0)
+			break
 		}
+
+		fmt.Printf(" > %d\n", val)
 	}
+
+	fmt.Println(" Receiver done...")
 }
 
 var done chan bool = make(chan bool)
 
 func main() {
 	fmt.Println(" --- Main ---")
-	env := os.Environ()
-	goroot := runtime.GOROOT()
-	//Use sysctl -n hw.ncpu for cores
-	fmt.Printf(" GOROOT: %s\n", goroot)
-
-	runtime.GOMAXPROCS(16)
-	for i, v := range env {
-		if strings.Contains(v, "GOMAXPROCS") {
-			fmt.Printf(" Found %v at %d", v, i)
-		}
-	}
-
 	ch := make(chan int)
 
 	go send(ch)
